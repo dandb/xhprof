@@ -4,7 +4,7 @@
   * When setting the `id` column, consider the length of the prefix you're specifying in $this->prefix
   * 
   *
-CREATE TABLE dbo.details
+CREATE TABLE dbo.profiling_details
 (
    id nchar(17) NOT NULL, 
    url nvarchar(255) NULL DEFAULT NULL, 
@@ -25,22 +25,22 @@ CREATE TABLE dbo.details
 )
 GO
 CREATE NONCLUSTERED INDEX dbo.url
-   ON dbo.details (url ASC)
+   ON dbo.profiling_details (url ASC)
 GO
 CREATE NONCLUSTERED INDEX dbo.c_url
-   ON dbo.details (c_url ASC)
+   ON dbo.profiling_details (c_url ASC)
 GO
 CREATE NONCLUSTERED INDEX dbo.cpu
-   ON dbo.details (cpu ASC)
+   ON dbo.profiling_details (cpu ASC)
 GO
 CREATE NONCLUSTERED INDEX dbo.wt
-   ON dbo.details (wt ASC)
+   ON dbo.profiling_details (wt ASC)
 GO
 CREATE NONCLUSTERED INDEX dbo.pmu
-   ON dbo.details (pmu ASC)
+   ON dbo.profiling_details (pmu ASC)
 GO
 CREATE NONCLUSTERED INDEX dbo.timestamp
-   ON dbo.details (timestamp
+   ON dbo.profiling_details (timestamp
   
 */
 

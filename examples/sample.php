@@ -33,20 +33,26 @@ print_r($xhprof_data);
 echo "</pre>";
 
 
-$XHPROF_ROOT = realpath(dirname(__FILE__) .'/..');
-include_once $XHPROF_ROOT . "/xhprof_lib/config.php";
-include_once $XHPROF_ROOT . "/xhprof_lib/utils/xhprof_lib.php";
-include_once $XHPROF_ROOT . "/xhprof_lib/utils/xhprof_runs.php";
 
+include_once 'xhprof_config.php';
 // save raw data for this profiler run using default
 // implementation of iXHProfRuns.
+
+$properties = array('DB_TYPE','DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_ADAPTER', 'SERVER_NAME', 'NAME_SPACE');
+
+foreach ($properties as $property) {
+  if(!defined($property)) {
+    echo 'You must define property ' . $property . '. See examples/xhprof_config.php'; exit;
+  }
+}
+
+require_once XHPROF_LIB_ROOT . 'config.php';
+require_once XHPROF_LIB_ROOT . 'utils/xhprof_lib.php';
+require_once XHPROF_LIB_ROOT . 'utils/xhprof_runs.php';
+
 $xhprof_runs = new XHProfRuns_Default();
 
 // save the run under a namespace "xhprof_foo"
 $run_id = $xhprof_runs->save_run($xhprof_data, "xhprof_foo");
 
-echo "<pre>".
-     "<a href='../xhprof_html/index.php?run=$run_id&source=xhprof_foo'>".
-     "View the XH GUI for this run".
-     "</a>\n".
-     "</pre>\n";
+require_once XHPROF_ROOT . '/xhprof_html/index.php';

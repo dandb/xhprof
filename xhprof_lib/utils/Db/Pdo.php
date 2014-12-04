@@ -34,6 +34,7 @@
 require_once XHPROF_LIB_ROOT.'/utils/Db/Abstract.php';
 class Db_Pdo extends Db_Abstract
 {
+    /** @var  PDOStatement */
     protected $curStmt;
     
     public function connect()
@@ -61,7 +62,7 @@ class Db_Pdo extends Db_Abstract
     {
         return $resultSet->fetch();
     }
-    
+
     public function escape($str)
     {
         $str = $this->db->quote($str);
@@ -77,16 +78,16 @@ class Db_Pdo extends Db_Abstract
         if ($this->curStmt === false) {
             return 0;
         }
-        return $this->curStmt->rowCount();
+        $this->curStmt->rowCount();
     }
     
     public static function unixTimestamp($field)
     {
-        return 'UNIX_TIMESTAMP('.$field.')';
+        return "DATEDIFF(s, '19700101' , ". $field . ')';
     }
     
     public static function dateSub($days)
     {
-        return 'DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)';
+        return 'DATEADD(day, -'.$days.',GETDATE())';
     }
 }

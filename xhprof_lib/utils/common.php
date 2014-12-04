@@ -11,8 +11,7 @@ function displayRuns($resultSet, $title = "")
         $url = urlencode($row['url']);
         $html['url'] = htmlentities($row['url'], ENT_QUOTES, 'UTF-8');
         $html['c_url'] = htmlentities($row['c_url'], ENT_QUOTES, 'UTF-8');
-        $date = strtotime($row['timestamp']);
-        $date = date('M d H:i:s', $date);
+        $date = date('M d H:i:s', $row['timestamp']);
         echo "\t<tr><td><a href=\"?run={$row['id']}\">$date</a><br /><span class=\"runid\">{$row['id']}</span></td><td>{$row['cpu']}</td><td>{$row['wt']}</td><td>{$row['pmu']}</td><td><a href=\"?geturl={$url}\">{$html['url']}</a></td><td><a href=\"?getcurl={$c_url}\">{$html['c_url']}</a></td></tr>\n";
     }
     echo "</tbody>\n";
@@ -95,7 +94,7 @@ function showChart($rs, $flip = false)
   
    
     ob_start();
-      require ("../xhprof_lib/templates/chart.phtml");   
+      require_once (XHPROF_LIB_ROOT . "templates/chart.phtml");
       $stuff = ob_get_contents();
     ob_end_clean();
    return array($stuff, "<div id=\"container\" style=\"width: 1000px; height: 500px; margin: 0 auto\"></div>");
