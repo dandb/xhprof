@@ -101,39 +101,7 @@ class XHProfRuns_Default implements iXHProfRuns {
       $class = 'Db_'.$_xhprof['dbadapter'];
       return $class;
   }
-  
-  /**
-  * When setting the `id` column, consider the length of the prefix you're specifying in $this->prefix
-  * 
-  *
-CREATE TABLE `details` (
-  `id` char(17) NOT NULL,
-  `url` varchar(255) default NULL,
-  `c_url` varchar(255) default NULL,
-  `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `server name` varchar(64) default NULL,
-  `perfdata` MEDIUMBLOB,
-  `type` tinyint(4) default NULL,
-  `cookie` BLOB,
-  `post` BLOB,
-  `get` BLOB,
-  `pmu` int(11) unsigned default NULL,
-  `wt` int(11) unsigned default NULL,
-  `cpu` int(11) unsigned default NULL,
-  `server_id` char(3) NOT NULL default 't11',
-  `aggregateCalls_include` varchar(255) DEFAULT NULL,
-  PRIMARY KEY  (`id`),
-  KEY `url` (`url`),
-  KEY `c_url` (`c_url`),
-  KEY `cpu` (`cpu`),
-  KEY `wt` (`wt`),
-  KEY `pmu` (`pmu`),
-  KEY `timestamp` (`timestamp`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-  
-*/
-
-    
+   
   private function gen_run_id($type) 
   {
     return uniqid();
@@ -149,12 +117,32 @@ CREATE TABLE `details` (
   */
   public function getRuns($stats)
   {
+      if (isset($stats['limit']))
+      {
+          $this->getNextAssoc($this->db->query("SET ROWCOUNT {$stats['limit']}"));
+      }
+
       if (isset($stats['select']))
       {
-        $query = "SELECT {$stats['select']} FROM `details` ";  
+        $query = "SELECT {$stats['select']} FROM dbo.profiling_details ";
       }else
       {
-        $query = "SELECT * FROM `details` ";
+        $query = "SELECT id
+                    ,url
+                    ,c_url
+                    ,DATEDIFF(SECOND, '1970-01-01', TIMESTAMP) AS timestamp
+                    ,server_name
+                    ,perfdata
+                    ,type
+                    ,cookie
+                    ,post
+                    ,get
+                    ,pmu
+                    ,wt
+                    ,cpu
+                    ,server_id
+                    ,aggregateCalls_include
+                FROM dbo.profiling_details ";
       }
       
       $skippers = array("limit", "order by", "group by", "where", "select");
@@ -181,7 +169,7 @@ CREATE TABLE `details` (
           }
           
           $value = $this->db->escape($value);
-          $query .= " `$column` = '$value' ";
+          $query .= " $column = '$value' ";
       }
       
       if (isset($stats['where']))
@@ -199,19 +187,14 @@ CREATE TABLE `details` (
       
       if (isset($stats['group by']))
       {
-          $query .= " GROUP BY `{$stats['group by']}` ";
+          $query .= " GROUP BY {$stats['group by']} ";
       }
       
       if (isset($stats['order by']))
       {
-          $query .= " ORDER BY `{$stats['order by']}` DESC";
+          $query .= " ORDER BY {$stats['order by']} DESC";
       }
-      
-      if (isset($stats['limit']))
-      {
-          $query .= " LIMIT {$stats['limit']} ";
-      }
-      
+
       $resultSet = $this->db->query($query);
       return $resultSet;
   }
@@ -225,9 +208,9 @@ CREATE TABLE `details` (
   public function getHardHit($criteria)
   {
     //call thing to get runs
-    $criteria['select'] = "distinct(`{$criteria['type']}`), count(`{$criteria['type']}`) AS `count` , sum(`wt`) as total_wall, avg(`wt`) as avg_wall";
+    $criteria['select'] = "distinct({$criteria['type']}), count({$criteria['type']}) AS count , sum(wt) as total_wall, avg(wt) as avg_wall";
     unset($criteria['type']);
-    $criteria['where'] = $this->db->dateSub($criteria['days']) . " <= `timestamp`";
+    $criteria['where'] = $this->db->dateSub($criteria['days']) . " <= timestamp";
     unset($criteria['days']);
     $criteria['group by'] = "url";
     $criteria['order by'] = "count";
@@ -239,7 +222,7 @@ CREATE TABLE `details` (
   public function getDistinct($data)
   {
 	$sql['column'] = $this->db->escape($data['column']);
-	$query = "SELECT DISTINCT(`{$sql['column']}`) FROM `details`";
+	$query = "SELECT DISTINCT({$sql['column']}) FROM dbo.profiling_details";
 	$rs = $this->db->query($query);
 	return $rs;
   }
@@ -261,13 +244,28 @@ CREATE TABLE `details` (
   public function get_run($run_id, $type, &$run_desc) 
   {
     $run_id = $this->db->escape($run_id);
-    $query = "SELECT * FROM `details` WHERE `id` = '$run_id'";
+    $query = "SELECT id
+                    ,url
+                    ,c_url
+                    ,DATEDIFF(SECOND, '1970-01-01', TIMESTAMP) AS timestamp
+                    ,server_name
+                    ,perfdata
+                    ,type
+                    ,cookie
+                    ,post
+                    ,get
+                    ,pmu
+                    ,wt
+                    ,cpu
+                    ,server_id
+                    ,aggregateCalls_include
+                FROM dbo.profiling_details  WHERE id = '$run_id'";
     $resultSet = $this->db->query($query);
     $data = $this->db->getNextAssoc($resultSet);
     
     //The Performance data is compressed lightly to avoid max row length
 	if (!isset($GLOBALS['_xhprof']['serializer']) || strtolower($GLOBALS['_xhprof']['serializer'] == 'php')) {
-		$contents = unserialize(gzuncompress($data['perfdata']));
+		$contents = unserialize(gzuncompress(base64_decode($data['perfdata'])));
 	} else {
 		$contents = json_decode(gzuncompress($data['perfdata']), true);
 	}
@@ -282,7 +280,7 @@ CREATE TABLE `details` (
         $this->run_details = $data;
     }else
     {
-        $this->run_details[0] = $this->run_details; 
+        $this->run_details[0] = $this->run_details;
         $this->run_details[1] = $data;
     }
     
@@ -300,7 +298,7 @@ CREATE TABLE `details` (
   */
   public function getUrlStats($data)
   {
-      $data['select'] = '`id`, '.$this->db->unixTimestamp('timestamp').' as `timestamp`, `pmu`, `wt`, `cpu`';
+      $data['select'] = 'id, '.$this->db->unixTimestamp('timestamp').' as timestamp, pmu, wt, cpu';
       $rs = $this->getRuns($data);
       return $rs;
   }
@@ -319,14 +317,26 @@ CREATE TABLE `details` (
       $c_url = $this->db->escape($c_url);
       //Runs same URL
       //  count, avg/min/max for wt, cpu, pmu
-      $query = "SELECT count(`id`), avg(`wt`), min(`wt`), max(`wt`),  avg(`cpu`), min(`cpu`), max(`cpu`), avg(`pmu`), min(`pmu`), max(`pmu`) FROM `details` WHERE `url` = '$url'";
+      $query = "SELECT count(id) as 'count(id)'
+                ,avg(wt) as 'avg(wt)'
+                ,min(wt) as 'min(wt)'
+                ,max(wt) as 'max(wt)'
+                ,avg(cpu) as 'avg(cpu)'
+                ,min(cpu) as 'min(cpu)'
+                ,max(cpu) as 'max(cpu)'
+                ,avg(pmu) as 'avg(pmu)'
+                ,min(pmu) as 'min(pmu)'
+                ,max(pmu) as 'max(pmu)'
+            FROM dbo.profiling_details
+            WHERE url = '$url'";
       $rs = $this->db->query($query);
       $row = $this->db->getNextAssoc($rs);
+
       $row['url'] = $url;
-      
-      $row['95(`wt`)'] = $this->calculatePercentile(array('count' => $row['count(`id`)'], 'column' => 'wt', 'type' => 'url', 'url' => $url));
-      $row['95(`cpu`)'] = $this->calculatePercentile(array('count' => $row['count(`id`)'], 'column' => 'cpu', 'type' => 'url', 'url' => $url));
-      $row['95(`pmu`)'] = $this->calculatePercentile(array('count' => $row['count(`id`)'], 'column' => 'pmu', 'type' => 'url', 'url' => $url));
+
+      $row['95(wt)'] = $this->calculatePercentile(array('count' => $row['count(id)'], 'column' => 'wt', 'type' => 'url', 'url' => $url));
+      $row['95(cpu)'] = $this->calculatePercentile(array('count' => $row['count(id)'], 'column' => 'cpu', 'type' => 'url', 'url' => $url));
+      $row['95(pmu)'] = $this->calculatePercentile(array('count' => $row['count(id)'], 'column' => 'pmu', 'type' => 'url', 'url' => $url));
 
       global $comparative;
       $comparative['url'] = $row;
@@ -334,13 +344,25 @@ CREATE TABLE `details` (
       
       //Runs same c_url
       //  count, avg/min/max for wt, cpu, pmu
-      $query = "SELECT count(`id`), avg(`wt`), min(`wt`), max(`wt`),  avg(`cpu`), min(`cpu`), max(`cpu`), avg(`pmu`), min(`pmu`), max(`pmu`) FROM `details` WHERE `c_url` = '$c_url'";
+      $query = "SELECT count(id) as 'count(id)'
+                ,avg(wt) as 'avg(wt)'
+                ,min(wt) as 'min(wt)'
+                ,max(wt) as 'max(wt)'
+                ,avg(cpu) as 'avg(cpu)'
+                ,min(cpu) as 'min(cpu)'
+                ,max(cpu) as 'max(cpu)'
+                ,avg(pmu) as 'avg(pmu)'
+                ,min(pmu) as 'min(pmu)'
+                ,max(pmu) as 'max(pmu)'
+            FROM dbo.profiling_details
+            WHERE c_url = '$c_url'";
+
       $rs = $this->db->query($query);
       $row = $this->db->getNextAssoc($rs);
       $row['url'] = $c_url;
-      $row['95(`wt`)'] = $this->calculatePercentile(array('count' => $row['count(`id`)'], 'column' => 'wt', 'type' => 'c_url', 'url' => $c_url));
-      $row['95(`cpu`)'] = $this->calculatePercentile(array('count' => $row['count(`id`)'], 'column' => 'cpu', 'type' => 'c_url', 'url' => $c_url));
-      $row['95(`pmu`)'] = $this->calculatePercentile(array('count' => $row['count(`id`)'], 'column' => 'pmu', 'type' => 'c_url', 'url' => $c_url));
+      $row['95(wt)'] = $this->calculatePercentile(array('count' => $row['count(id)'], 'column' => 'wt', 'type' => 'c_url', 'url' => $c_url));
+      $row['95(cpu)'] = $this->calculatePercentile(array('count' => $row['count(id)'], 'column' => 'cpu', 'type' => 'c_url', 'url' => $c_url));
+      $row['95(pmu)'] = $this->calculatePercentile(array('count' => $row['count(id)'], 'column' => 'pmu', 'type' => 'c_url', 'url' => $c_url));
 
       $comparative['c_url'] = $row;
       unset($row);
@@ -349,11 +371,11 @@ CREATE TABLE `details` (
   
   protected function calculatePercentile($details)
   {
-                  $limit = (int) ($details['count'] / 20);
-                  $query = "SELECT `{$details['column']}` as `value` FROM `details` WHERE `{$details['type']}` = '{$details['url']}' ORDER BY `{$details['column']}` DESC LIMIT $limit, 1";
-                  $rs = $this->db->query($query);
-                  $row = $this->db->getNextAssoc($rs);
-                  return $row['value'];
+      $limit = (int) ($details['count'] / 20);
+      $query = "SELECT TOP $limit {$details['column']} as value FROM dbo.profiling_details WHERE {$details['type']} = '{$details['url']}' ORDER BY {$details['column']} DESC";
+      $rs = $this->db->query($query);
+      $row = $this->db->getNextAssoc($rs);
+      return $row['value'];
   }
   
   /**
@@ -365,7 +387,7 @@ CREATE TABLE `details` (
   * @param mixed $xhprof_details
   * @return string
   */
-    public function save_run($xhprof_data, $type, $run_id = null, $xhprof_details = null) 
+    public function save_run($xhprof_data, $type, $run_id = null, $xhprof_details = null)
     {
         global $_xhprof;
 
@@ -431,7 +453,7 @@ CREATE TABLE `details` (
 		// The value of 2 seems to be light enugh that we're not killing the server, but still gives us lots of breathing room on 
 		// full production code. 
 		if (!isset($GLOBALS['_xhprof']['serializer']) || strtolower($GLOBALS['_xhprof']['serializer'] == 'php')) {
-			$sql['data'] = $this->db->escape(gzcompress(serialize($xhprof_data), 2));
+			$sql['data'] = base64_encode(gzcompress(serialize($xhprof_data), 2));
 		} else {
 			$sql['data'] = $this->db->escape(gzcompress(json_encode($xhprof_data), 2));
 		}
@@ -445,16 +467,16 @@ CREATE TABLE `details` (
         $sql['servername'] = $this->db->escape($sname);
         $sql['type']  = (int) (isset($xhprof_details['type']) ? $xhprof_details['type'] : 0);
         $sql['timestamp'] = $this->db->escape($_SERVER['REQUEST_TIME']);
-	$sql['server_id'] = $this->db->escape($_xhprof['servername']);
+	    $sql['server_id'] = $this->db->escape($_xhprof['servername']);
         $sql['aggregateCalls_include'] = getenv('xhprof_aggregateCalls_include') ? getenv('xhprof_aggregateCalls_include') : '';
-        
-        $query = "INSERT INTO `details` (`id`, `url`, `c_url`, `timestamp`, `server name`, `perfdata`, `type`, `cookie`, `post`, `get`, `pmu`, `wt`, `cpu`, `server_id`, `aggregateCalls_include`) VALUES('$run_id', '{$sql['url']}', '{$sql['c_url']}', FROM_UNIXTIME('{$sql['timestamp']}'), '{$sql['servername']}', '{$sql['data']}', '{$sql['type']}', '{$sql['cookie']}', '{$sql['post']}', '{$sql['get']}', '{$sql['pmu']}', '{$sql['wt']}', '{$sql['cpu']}', '{$sql['server_id']}', '{$sql['aggregateCalls_include']}')";
-        
+
+        $query = "INSERT INTO dbo.profiling_details (id, url, c_url, timestamp, server_name, perfdata, type, cookie, post, get, pmu, wt, cpu, server_id, aggregateCalls_include) VALUES('$run_id', '{$sql['url']}', '{$sql['c_url']}', GETDATE(), '{$sql['servername']}', '{$sql['data']}', '{$sql['type']}', '{$sql['cookie']}', '{$sql['post']}', '{$sql['get']}', '{$sql['pmu']}', '{$sql['wt']}', '{$sql['cpu']}', '{$sql['server_id']}', '{$sql['aggregateCalls_include']}')";
         $this->db->query($query);
         if ($this->db->affectedRows($this->db->linkID) == 1)
         {
             return $run_id;
-        }else
+        }
+        else
         {
             global $_xhprof;
             if ($_xhprof['display'] === true)

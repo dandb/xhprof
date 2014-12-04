@@ -1,0 +1,12 @@
+{
+    "name": "chetan12/xhprof",
+    "description": "XHGUI with sql server backend",
+    "authors": [
+        {
+            "name": "Chetan Birajdar",
+            "email": "birajdar.chetan@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

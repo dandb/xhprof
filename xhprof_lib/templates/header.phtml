@@ -5,17 +5,27 @@
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<title>XHGui: Hierarchical Profiler Report</title>
 
-<link href='css/xhprof.css' rel='stylesheet'  type='text/css'></link>
-<link href="css/tablesorter.pager.css" rel="stylesheet" type="text/css" />             
-<link href='third-party/jquery/jquery.tooltip.css'  rel='stylesheet' type='text/css'></link>
-<link href='third-party/jquery/jquery.autocomplete.css'  rel='stylesheet' type='text/css'></link>
-<script src='third-party/jquery/jquery-1.7.1.min.js' type="text/javascript"></script>    
-<script src='third-party/jquery/jquery.tooltip.js' type="text/javascript"></script>
-<script src='third-party/jquery/jquery.autocomplete.js' type="text/javascript"></script>
-<script src='third-party/jquery/jquery.stickytableheaders.js' type="text/javascript"></script>
-<script src='third-party/jquery/tablesorter.min.js' type="text/javascript"></script>
-<script src='third-party/jquery/tablesorter.pager.js' type="text/javascript"></script>
-<script src='third-party/highcharts/highcharts.js' type="text/javascript"></script>
+
+<style type="text/css">
+    <?php
+         include(XHPROF_HTML_ROOT . 'css/xhprof.css');
+         include(XHPROF_HTML_ROOT . 'css/tablesorter.pager.css');
+         include(XHPROF_HTML_ROOT . 'third-party/jquery/jquery.autocomplete.css');
+         include(XHPROF_HTML_ROOT . 'third-party/jquery/jquery.tooltip.css');
+    ?>
+</style>
+
+<script type="text/javascript">
+    <?php
+        include(XHPROF_HTML_ROOT . 'third-party/jquery/jquery-1.7.1.min.js');
+        include(XHPROF_HTML_ROOT . 'third-party/jquery/jquery.tooltip.js');
+        include(XHPROF_HTML_ROOT . 'third-party/jquery/jquery.autocomplete.js');
+        include(XHPROF_HTML_ROOT . 'third-party/jquery/jquery.stickytableheaders.js');
+        include(XHPROF_HTML_ROOT . 'third-party/jquery/tablesorter.min.js');
+        include(XHPROF_HTML_ROOT . 'third-party/jquery/tablesorter.pager.js');
+        include(XHPROF_HTML_ROOT . 'third-party/highcharts/highcharts.js');
+    ?>
+</script>
 
 <?php
 if (isset($_xh_header))
