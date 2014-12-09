@@ -17,7 +17,38 @@ include_once XHPROF_LIB_ROOT . "/config.php";
 include_once XHPROF_LIB_ROOT . '/display/xhprof.php';
 include_once XHPROF_LIB_ROOT . "/utils/common.php";
 
-if (false !== $GLOBALS['controlIPs'] && !in_array($_SERVER['REMOTE_ADDR'], $GLOBALS['controlIPs']))
+function getClientIPs()
+{
+    $clientIPs = array();
+
+    //If the PHP application server is sitting behind the load balancer or some sort of proxy,
+    //$_SERVER[‘REMOTE_ADDR’] will return the ip of the proxy, not the user client.
+    //Check HTTP_X_FORWARDED_FOR to extract client IP address.
+    if(array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER))
+    {
+        $ipAddresses = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        if(is_array($ipAddresses))
+        {
+            foreach($ipAddresses as $ipAddress)
+            {
+                $clientIPs = array_merge($clientIPs, explode(',', $ipAddress));
+            }
+        }
+        else
+        {
+            $clientIPs = array_merge($clientIPs, explode(',', $ipAddresses));
+        }
+    }
+
+    if(array_key_exists('REMOTE_ADDR', $_SERVER))
+    {
+        array_push($clientIPs, $_SERVER['REMOTE_ADDR']);
+    }
+
+    return $clientIPs;
+}
+
+if (false !== $GLOBALS['controlIPs'] && count(array_intersect($GLOBALS['controlIPs'], getClientIPs())) === 0)
 {
   die("You do not have permission to view this page.");
 }
