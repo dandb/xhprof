@@ -38,8 +38,8 @@ $exceptionPostURLs[] = "login";
 $_xhprof['display'] = false;
 $_xhprof['doprofile'] = false;
 
-if(!isset($controlIPs))
-    $controlIPs = false; //Disables access controlls completely.
+if(!isset($GLOBALS['controlIPs']))
+    $GLOBALS['controlIPs'] = false; //Disables access controlls completely.
 
 //Default weight - can be overidden by an Apache environment variable 'xhprof_weight' for domain-specific values
 $weight = 100;

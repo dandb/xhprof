@@ -32,7 +32,7 @@ class visibilitator
 }
 
 // Only users from authorized IP addresses may control Profiling
-if ($controlIPs === false || in_array($_SERVER['REMOTE_ADDR'], $controlIPs) || PHP_SAPI == 'cli')
+if ($GLOBALS['controlIPs'] === false || in_array($_SERVER['REMOTE_ADDR'], $GLOBALS['controlIPs']) || PHP_SAPI == 'cli')
 {
   if (isset($_GET['_profile']))
   {

@@ -17,12 +17,12 @@ include_once XHPROF_LIB_ROOT . "/config.php";
 include_once XHPROF_LIB_ROOT . '/display/xhprof.php';
 include_once XHPROF_LIB_ROOT . "/utils/common.php";
 
-if (false !== $controlIPs && !in_array($_SERVER['REMOTE_ADDR'], $controlIPs))
+if (false !== $GLOBALS['controlIPs'] && !in_array($_SERVER['REMOTE_ADDR'], $GLOBALS['controlIPs']))
 {
   die("You do not have permission to view this page.");
 }
 
-unset($controlIPs);
+unset($GLOBALS['controlIPs']);
 
 // param name, its type, and default value
 $params = array('run'        => array(XHPROF_STRING_PARAM, ''),

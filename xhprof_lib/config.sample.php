@@ -48,10 +48,10 @@ $_xhprof['display'] = false;
 $_xhprof['doprofile'] = false;
 
 //Control IPs allow you to specify which IPs will be permitted to control when profiling is on or off within your application, and view the results via the UI.
-// $controlIPs = false; //Disables access controlls completely. 
-$controlIPs = array();
-$controlIPs[] = "127.0.0.1";   // localhost, you'll want to add your own ip here
-$controlIPs[] = "::1";         // localhost IP v6
+// $GLOBALS['controlIPs'] = false; //Disables access controlls completely.
+$GLOBALS['controlIPs'] = array();
+$GLOBALS['controlIPs'][] = "127.0.0.1";   // localhost, you'll want to add your own ip here
+$GLOBALS['controlIPs'][] = "::1";         // localhost IP v6
 
 //$otherURLS = array();
 
