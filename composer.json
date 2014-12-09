@@ -1,10 +1,10 @@
 {
-    "name": "chetan12/xhprof",
+    "name": "dandb/xhprof",
     "description": "XHGUI with sql server backend",
     "authors": [
         {
-            "name": "Chetan Birajdar",
-            "email": "birajdar.chetan@gmail.com"
+            "name": "Team Fowl",
+            "email": "owl-dev@dandb.com"
         }
     ],
     "minimum-stability": "dev",
