@@ -1,7 +1,7 @@
 XHProf UI
 =========
 
-Fork from [preinheimer/xhprof] (https://github.com/preinheimer/xhprof). Original library modified to support with SQL server backend.
+Fork from [preinheimer/xhprof] (https://github.com/preinheimer/xhprof). Original library modified to support with SQL server backend. Would've pull requested into the original library to support both database technologies, but the code seemed like too much effort.
 
 This is a graphical front end designed to store and present the profiling information provided by the Facebook created XHProf profiling tool.
 
