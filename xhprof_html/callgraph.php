@@ -28,12 +28,6 @@
  *
  * @author Changhao Jiang (cjiang@facebook.com)
  */
-require_once ("../xhprof_lib/config.php");
-
-if (false !== $GLOBALS['controlIPs'] && !in_array($_SERVER['REMOTE_ADDR'], $GLOBALS['controlIPs']))
-{
-  die("You do not have permission to view this page.");
-}
 
 // by default assume that xhprof_html & xhprof_lib directories
 // are at the same level.

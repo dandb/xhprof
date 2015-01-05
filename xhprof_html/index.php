@@ -120,6 +120,10 @@ if (!is_null($serverFilter))
 }
 $_xh_header = "";
 
+if(strpos($_SERVER['REQUEST_URI'], 'callgraph'))
+{
+    include_once 'callgraph.php';
+}
 if(isset($_GET['run1']) || isset($_GET['run']))
 {
     include_once(XHPROF_LIB_ROOT . "templates/header.phtml");
